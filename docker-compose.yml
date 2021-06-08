@@ -1,0 +1,121 @@
+version: "3"
+
+services:
+    discovery-server:
+        container_name: discovery-server
+        image: agrawalk9/discovery-server:v1
+        ports:
+            - "8761:8761"
+        volumes:
+            - /tmp:/workspace/logs
+    activemq:
+        image: rmohr/activemq:5.10.0
+        container_name: activemq
+        environment:
+            - "TZ=Europe/Amsterdam"
+        volumes:
+            - "./activemq/activemq.xml:/conf/activemq.xml"
+        ports:
+            - "61616:61616" # broker (admin:adminactivemq)(amq:amq)
+            - "8161:8161"   # web    http://boot2docker:8161/admin (admin:admin)
+    jaeger:
+        container_name: jaeger
+        image: jaegertracing/all-in-one:1.17
+        ports:
+            - 6831:6831/udp
+            - 16686:16686
+        volumes:
+            - /tmp:/workspace/logs
+    order-service:
+        container_name: order-service
+        image: agrawalk9/order-service:v1
+        ports:
+            - "8088:8088"
+        links:
+            - discovery-server:discovery-server
+            - jaeger:jaeger
+        environment:
+            - discovery_server_url=http://discovery-server:8761/eureka
+            - jaegerhost=jaeger
+            - jaegerport=6831
+        volumes:
+            - /tmp:/workspace/logs
+    notification-service:
+        container_name: notification-service
+        image: agrawalk9/notification-service:v1
+        links:
+            - discovery-server:discovery-server
+            - jaeger:jaeger
+            - activemq:activemq
+        environment:
+            - discovery_server_url=http://discovery-server:8761/eureka
+            - active_mq_url=tcp://activemq:61616
+            - jaegerhost=jaeger
+            - jaegerport=6831
+        volumes:
+            - /tmp:/workspace/logs
+    service-receiver:
+        container_name: service-receiver
+        image: agrawalk9/service-receiver:v1
+        ports:
+            - "8084:8084"
+        links:
+            - discovery-server:discovery-server
+            - jaeger:jaeger
+        environment:
+            - discovery_server_url=http://discovery-server:8761/eureka
+            - jaegerhost=jaeger
+            - jaegerport=6831
+        volumes:
+            - /tmp:/workspace/logs
+    service-provider:
+        container_name: service-provider
+        image: agrawalk9/service-provider:v1
+        ports:
+            - "8086:8086"
+        links:
+            - discovery-server:discovery-server
+            - activemq:activemq
+            - jaeger:jaeger
+        environment:
+            - discovery_server_url=http://discovery-server:8761/eureka
+            - active_mq_url=tcp://activemq:61616
+            - jaegerhost=jaeger
+            - jaegerport=6831
+        volumes:
+            - /tmp:/workspace/logs
+    admin-team:
+        container_name: admin-team
+        image: agrawalk9/admin-team:v1
+        ports:
+            - "8085:8085"
+        links:
+            - discovery-server:discovery-server
+            - activemq:activemq
+            - jaeger:jaeger
+        environment:
+            - discovery_server_url=http://discovery-server:8761/eureka
+            - active_mq_url=tcp://activemq:61616
+            - jaegerhost=jaeger
+            - jaegerport=6831
+        volumes:
+            - /tmp:/workspace/logs
+    api-gateway:
+        container_name: api-gateway
+        image: agrawalk9/api-gateway:v1
+        ports:
+            - "8080:8080"
+        links:
+            - discovery-server:discovery-server
+            - service-receiver:service-receiver
+            - admin-team:admin-team
+            - service-provider:service-provider
+            - order-service:order-service
+        environment:
+            - discovery_server_url=http://discovery-server:8761/eureka
+            - service_receiver_url=http://service-receiver:8084
+            - admin_team_url=http://admin-team:8085
+            - service_provider_url=http://service-provider:8086
+            - order_service_url=http://order-service:8088
+        volumes:
+            - /tmp:/workspace/logs

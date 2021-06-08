@@ -1,0 +1,100 @@
+{
+	"info": {
+		"_postman_id": "b5032002-0049-468a-a8f5-a825d6067afd",
+		"name": "nagp-assignment-1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Status of orders requested by a particular receiver",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/service-receiver/receiverReqStatus?id=2",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"service-receiver",
+						"receiverReqStatus"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Request a new service",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/service-receiver/requestForService?type=electrician&id=2",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"service-receiver",
+						"requestForService"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "electrician"
+						},
+						{
+							"key": "id",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Confirmation by service provider",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/service-provider/serviceResponse?receiverId=2&providerId=1&reqType=electrician&status=CONFIRMED",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"service-provider",
+						"serviceResponse"
+					],
+					"query": [
+						{
+							"key": "receiverId",
+							"value": "2"
+						},
+						{
+							"key": "providerId",
+							"value": "1"
+						},
+						{
+							"key": "reqType",
+							"value": "electrician"
+						},
+						{
+							"key": "status",
+							"value": "CONFIRMED"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
